@@ -1,10 +1,11 @@
 import * as http from "@std/http";
 import * as path from "@std/path/posix";
 import * as fs from "@std/fs";
+import * as frontmatter from "@std/front-matter";
 
 import { transpile } from "@deno/emit";
 
-import { CSS, render } from "@deno/gfm";
+import { CSS, render, type RenderOptions } from "@deno/gfm";
 import "prismjs/components/prism-bash.min.js";
 import "prismjs/components/prism-javascript.min.js";
 import "prismjs/components/prism-typescript.min.js";
@@ -201,12 +202,16 @@ export class FileServer {
         }
 
         let markdown = await Deno.readTextFile(filepath);
-        const match = markdown.match(FRONTMATTER_REGEX);
-        if (match) {
-            markdown = markdown.slice(match[0].length);
+        if (frontmatter.test(markdown, ["yaml"])) {
+            const match = markdown.match(FRONTMATTER_REGEX);
+            if (match) {
+                markdown = markdown.slice(match[0].length);
+            }
         }
 
-        const body = md2html(url.pathname, markdown);
+        const { attrs: options } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
+        const main = render(markdown, options);
+        const body = layout(options.title || url.pathname, main);
         const res = new Response(body, {
             headers: {
                 "Content-Type": "text/html; charset=utf-8",
@@ -227,7 +232,7 @@ export class FileServer {
 
 const FRONTMATTER_REGEX = /^---\n[\s\S]+?\n---\n/;
 
-const md2html = (title: string, markdown: string) =>
+const layout = (title: string, body: string) =>
     /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -245,7 +250,7 @@ const md2html = (title: string, markdown: string) =>
 </head>
 <body data-color-mode="auto" data-light-theme="light" data-dark-theme="dark" class="markdown-body">
 <main>
-  ${render(markdown)}
+  ${body}
 </main>
 </body>
 </html>
