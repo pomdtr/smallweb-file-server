@@ -53,12 +53,22 @@ export class FileServer {
 
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
         const url = new URL(req.url);
-        const fileinfo = await Deno.stat(this.resolve(url.pathname))
+        const info = await Deno.stat(this.resolve(url.pathname)).catch(() => null);
+        if (!info) {
+            return new Response("Not found", { status: 404 });
+        }
 
-
+        if (info.isDirectory && !req.url.endsWith("/")) {
+            return new Response(null, {
+                status: 301,
+                headers: {
+                    location: req.url + "/",
+                },
+            });
+        }
 
         if (
-            fileinfo.isDirectory
+            info.isDirectory
             && this.options.showIndex
             && this.options.gfm
             && !await fs.exists(this.resolve(path.join(url.pathname, "index.html")))
@@ -168,15 +178,17 @@ export class FileServer {
 
     private serveMarkdown = async (req: Request): Promise<Response> => {
         const url = new URL(req.url);
-
-        const filepath = this.resolve(url.pathname);
-        const fileinfo = await Deno.stat(filepath)
+        let filepath = this.resolve(url.pathname);
+        let fileinfo = await Deno.stat(filepath)
             .catch(() => null);
 
-
-
         if (!fileinfo) {
-            return new Response("Not found", { status: 404 });
+            filepath = filepath + ".md";
+            fileinfo = await Deno.stat(filepath)
+                .catch(() => null);
+            if (!fileinfo) {
+                return new Response("Not found", { status: 404 });
+            }
         }
 
         if (fileinfo.isDirectory) {
@@ -202,14 +214,16 @@ export class FileServer {
         }
 
         let markdown = await Deno.readTextFile(filepath);
+        let options: { title?: string } & RenderOptions = {}
         if (frontmatter.test(markdown, ["yaml"])) {
             const match = markdown.match(FRONTMATTER_REGEX);
             if (match) {
                 markdown = markdown.slice(match[0].length);
+                const { attrs } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
+                options = attrs
             }
         }
 
-        const { attrs: options } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
         const main = render(markdown, options);
         const body = layout(options.title || url.pathname, main);
         const res = new Response(body, {
