@@ -63,7 +63,6 @@ export class FileServer {
                 status: 301,
                 headers: {
                     location: req.url + "/",
-                    "Access-Control-Allow-Origin": this.options.enableCors ? "*" : undefined,
                 },
             });
         }
