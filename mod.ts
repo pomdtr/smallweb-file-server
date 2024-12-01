@@ -46,23 +46,24 @@ export class FileServer {
             pathname = pathname.replace(this.options.urlRoot, "");
         }
 
-
-
         return path.join(this.options.fsRoot || ".", pathname);
     }
 
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
         const url = new URL(req.url);
-        const info = await Deno.stat(this.resolve(url.pathname)).catch(() => null);
-        if (!info) {
-            return new Response("Not found", { status: 404 });
+
+        const filepath = this.resolve(url.pathname);
+        if (!await fs.exists(filepath)) {
+            return new Response("Not found", { status: 404, headers: this.options.enableCors ? { "Access-Control-Allow-Origin": "*" } : {} });
         }
 
+        const info = await Deno.stat(filepath);
         if (info.isDirectory && !req.url.endsWith("/")) {
             return new Response(null, {
                 status: 301,
                 headers: {
                     location: req.url + "/",
+                    "Access-Control-Allow-Origin": this.options.enableCors ? "*" : undefined,
                 },
             });
         }
@@ -77,14 +78,14 @@ export class FileServer {
             return this.serveMarkdown(req);
         }
 
-        const extension = path.extname(url.pathname);
+        const extension = path.extname(filepath);
         if (
             this.options.transpile && [".ts", ".tsx", ".jsx"].includes(extension)
         ) {
             return this.serveTranspiled(req);
         }
 
-        if (this.options.gfm && extension === ".md") {
+        if (this.options.gfm && extension === ".md" && !http.accepts(req, "text/markdown")) {
             return this.serveMarkdown(req);
         }
 
@@ -98,7 +99,8 @@ export class FileServer {
         const fileinfo = await Deno.stat(filepath)
             .catch(() => null);
         if (!fileinfo) {
-            return new Response("Not found", { status: 404 });
+            return new Response("Not found", { status: 404 }
+            );
         }
 
         if (fileinfo.isDirectory) {
