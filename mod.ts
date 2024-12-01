@@ -84,7 +84,7 @@ export class FileServer {
             return this.serveTranspiled(req);
         }
 
-        if (this.options.gfm && extension === ".md" && !http.accepts(req, "text/markdown")) {
+        if (this.options.gfm && extension === ".md") {
             return this.serveMarkdown(req);
         }
 
