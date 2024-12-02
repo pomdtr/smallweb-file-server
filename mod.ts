@@ -91,6 +91,31 @@ export class FileServer {
         return http.serveDir(req, this.options);
     };
 
+    run: (args: string[]) => void | Promise<void> = async (args) => {
+        const filepath = args.length > 0 ? this.resolve(args[0]) : this.options.fsRoot || ".";
+        try {
+            const stat = await Deno.stat(filepath);
+            if (stat.isDirectory) {
+                for await (const entry of Deno.readDir(filepath)) {
+                    console.log(entry.name);
+                }
+
+                return;
+            }
+            const file = await Deno.open(filepath);
+            file.readable.pipeTo(Deno.stdout.writable);
+
+        } catch (e) {
+            if (e instanceof Deno.errors.NotFound) {
+                console.error(`File not found: ${filepath}`);
+            } else {
+                console.error(e);
+            }
+
+            Deno.exitCode = 1;
+        }
+    }
+
 
     private serveTranspiled = async (req: Request) => {
         const url = new URL(req.url);
