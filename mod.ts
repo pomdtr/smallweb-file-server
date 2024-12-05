@@ -53,7 +53,7 @@ export class FileServer {
         const url = new URL(req.url);
 
         const filepath = this.resolve(url.pathname);
-        if (filepath === path.join(Deno.cwd(), ".env")) {
+        if (path.basename(filepath) == ".env") {
             return new Response(".env files are not served", { status: 403 });
         }
 
