@@ -53,6 +53,10 @@ export class FileServer {
         const url = new URL(req.url);
 
         const filepath = this.resolve(url.pathname);
+        if (filepath === path.join(Deno.cwd(), ".env")) {
+            return new Response(".env files are not served", { status: 403 });
+        }
+
         if (!await fs.exists(filepath)) {
             return new Response("Not found", { status: 404, headers: this.options.enableCors ? { "Access-Control-Allow-Origin": "*" } : {} });
         }
@@ -205,9 +209,7 @@ export class FileServer {
     private serveMarkdown = async (req: Request): Promise<Response> => {
         const url = new URL(req.url);
         let filepath = this.resolve(url.pathname);
-        let fileinfo = await Deno.stat(filepath)
-            .catch(() => null);
-
+        let fileinfo = await Deno.stat(filepath).catch(() => null);
         if (!fileinfo) {
             filepath = filepath + ".md";
             fileinfo = await Deno.stat(filepath)
@@ -225,8 +227,6 @@ export class FileServer {
 
             return this.serveMarkdown(new Request(`${url.origin}${path.join(url.pathname, "index.md")}`));
         }
-
-
 
         if (this.options.cache) {
             const cached = await cache.match(req);
@@ -302,6 +302,7 @@ const fileServer: FileServer = new FileServer({
     showIndex: true,
     showDirListing: true,
     enableCors: true,
+    showDotfiles: true,
     quiet: true,
     cache: true,
 });
