@@ -208,15 +208,10 @@ export class FileServer {
 
     private serveMarkdown = async (req: Request): Promise<Response> => {
         const url = new URL(req.url);
-        let filepath = this.resolve(url.pathname);
-        let fileinfo = await Deno.stat(filepath).catch(() => null);
+        const filepath = this.resolve(url.pathname);
+        const fileinfo = await Deno.stat(filepath).catch(() => null);
         if (!fileinfo) {
-            filepath = filepath + ".md";
-            fileinfo = await Deno.stat(filepath)
-                .catch(() => null);
-            if (!fileinfo) {
-                return new Response("Not found", { status: 404 });
-            }
+            return new Response("Not found", { status: 404 });
         }
 
         if (fileinfo.isDirectory) {
