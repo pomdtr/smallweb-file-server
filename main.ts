@@ -5,6 +5,7 @@ const fileServer = new FileServer({
     showIndex: true,
     showDirListing: true,
     gfm: true,
+    cleanUrls: true,
     transpile: true,
     enableCors: true,
 });

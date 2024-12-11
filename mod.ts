@@ -13,6 +13,7 @@ import "prismjs/components/prism-css.min.js";
 import "prismjs/components/prism-json.min.js";
 import "prismjs/components/prism-jsx.min.js";
 import "prismjs/components/prism-tsx.min.js";
+import { options } from "npm:marked@12";
 
 const cache = await caches.open("file-server");
 
@@ -27,6 +28,11 @@ type FileServerOptions = {
      * @default false
      */
     gfm?: boolean;
+    /**
+     * Wether to allow files without an .html extension to be served.
+     * @default false
+     */
+    cleanUrls?: boolean;
     /**
      * Whether to cache transpiled files.
      * @default false
@@ -57,11 +63,17 @@ export class FileServer {
             return new Response(".env files are not served", { status: 403 });
         }
 
-        if (!await fs.exists(filepath)) {
+        let info: Deno.FileInfo;
+        try {
+            info = await Deno.stat(filepath);
+        } catch (_e) {
+            if (this.options.cleanUrls) {
+                return http.serveDir(new Request(req.url + ".html"), this.options);
+            }
+
             return new Response("Not found", { status: 404, headers: this.options.enableCors ? { "Access-Control-Allow-Origin": "*" } : {} });
         }
 
-        const info = await Deno.stat(filepath);
         if (info.isDirectory && !req.url.endsWith("/")) {
             return new Response(null, {
                 status: 301,
@@ -296,6 +308,7 @@ const fileServer: FileServer = new FileServer({
     gfm: true,
     showIndex: true,
     showDirListing: true,
+    cleanUrls: true,
     enableCors: true,
     showDotfiles: true,
     quiet: true,
