@@ -221,9 +221,9 @@ class FileServer {
         if (frontmatter.test(markdown, ["yaml"])) {
             const match = markdown.match(FRONTMATTER_REGEX);
             if (match) {
-                markdown = markdown.slice(match[0].length);
                 const { attrs } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
                 options = attrs
+                markdown = markdown.slice(match[0].length);
             }
         }
 
