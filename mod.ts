@@ -17,27 +17,24 @@ import "prismjs/components/prism-tsx.min.js";
 const cache = await caches.open("file-server");
 
 class FileServer {
-    private options: http.ServeDirOptions
-    constructor() {
-        this.options = {
-            showIndex: true,
-            showDirListing: true,
-            enableCors: true,
-            showDotfiles: true,
-            quiet: true,
-        }
+    private serveDirOptions: http.ServeDirOptions = {
+        showIndex: true,
+        showDirListing: true,
+        enableCors: true,
+        showDotfiles: true,
+        quiet: true,
     }
 
     private resolve(pathname: string) {
-        if (this.options.urlRoot) {
-            if (!pathname.startsWith(this.options.urlRoot)) {
+        if (this.serveDirOptions.urlRoot) {
+            if (!pathname.startsWith(this.serveDirOptions.urlRoot)) {
                 throw new Error("Invalid pathname");
             }
 
-            pathname = pathname.replace(this.options.urlRoot, "");
+            pathname = pathname.replace(this.serveDirOptions.urlRoot, "");
         }
 
-        return path.join(this.options.fsRoot || ".", pathname);
+        return path.join(this.serveDirOptions.fsRoot || ".", pathname);
     }
 
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
@@ -52,7 +49,7 @@ class FileServer {
         try {
             info = await Deno.stat(filepath);
         } catch (_e) {
-            return http.serveDir(new Request(req.url + ".html", req), this.options);
+            return http.serveDir(new Request(req.url + ".html", req), this.serveDirOptions);
         }
 
         if (info.isDirectory && !req.url.endsWith("/")) {
@@ -66,7 +63,7 @@ class FileServer {
 
         if (
             info.isDirectory
-            && this.options.showIndex
+            && this.serveDirOptions.showIndex
             && !await fs.exists(this.resolve(path.join(url.pathname, "index.html")))
             && await fs.exists(this.resolve(path.join(url.pathname, "index.md")))
         ) {
@@ -84,11 +81,11 @@ class FileServer {
             return this.serveMarkdown(req);
         }
 
-        return http.serveDir(req, this.options);
+        return http.serveDir(req, this.serveDirOptions);
     };
 
     run: (args: string[]) => void | Promise<void> = async (args) => {
-        const filepath = args.length > 0 ? this.resolve(args[0]) : this.options.fsRoot || ".";
+        const filepath = args.length > 0 ? this.resolve(args[0]) : this.serveDirOptions.fsRoot || ".";
         try {
             const stat = await Deno.stat(filepath);
             if (stat.isDirectory) {
@@ -124,7 +121,7 @@ class FileServer {
         }
 
         if (fileinfo.isDirectory) {
-            return http.serveDir(req, this.options);
+            return http.serveDir(req, this.serveDirOptions);
         }
 
         const cached = await cache.match(req);
@@ -175,7 +172,7 @@ class FileServer {
                 status: 200,
             });
 
-            if (this.options.enableCors) {
+            if (this.serveDirOptions.enableCors) {
                 res.headers.set("Access-Control-Allow-Origin", "*");
             }
 
@@ -202,9 +199,9 @@ class FileServer {
         }
 
         if (fileinfo.isDirectory) {
-            const index = path.join(this.options.fsRoot || ".", url.pathname, "index.md");
+            const index = path.join(this.serveDirOptions.fsRoot || ".", url.pathname, "index.md");
             if (!await fs.exists(index)) {
-                return http.serveDir(req, this.options);
+                return http.serveDir(req, this.serveDirOptions);
             }
 
             return this.serveMarkdown(new Request(`${url.origin}${path.join(url.pathname, "index.md")}`));
@@ -239,7 +236,7 @@ class FileServer {
             },
         });
 
-        if (this.options.enableCors) {
+        if (this.serveDirOptions.enableCors) {
             res.headers.set("Access-Control-Allow-Origin", "*");
         }
 
