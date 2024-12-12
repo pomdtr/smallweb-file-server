@@ -13,35 +13,20 @@ import "prismjs/components/prism-css.min.js";
 import "prismjs/components/prism-json.min.js";
 import "prismjs/components/prism-jsx.min.js";
 import "prismjs/components/prism-tsx.min.js";
-import { options } from "npm:marked@12";
 
 const cache = await caches.open("file-server");
 
-type FileServerOptions = {
-    /**
-     * Whether to transpile files with .ts, .jsx, .tsx extensions to javascript.
-     * @default false
-     */
-    transpile?: boolean;
-    /**
-     * Whether to convert markdown files to html.
-     * @default false
-     */
-    gfm?: boolean;
-    /**
-     * Wether to allow files without an .html extension to be served.
-     * @default false
-     */
-    cleanUrls?: boolean;
-    /**
-     * Whether to cache transpiled files.
-     * @default false
-     */
-    cache?: boolean;
-} & http.ServeDirOptions;
-
-export class FileServer {
-    constructor(private options: FileServerOptions = {}) { }
+class FileServer {
+    private options: http.ServeDirOptions
+    constructor() {
+        this.options = {
+            showIndex: true,
+            showDirListing: true,
+            enableCors: true,
+            showDotfiles: true,
+            quiet: true,
+        }
+    }
 
     private resolve(pathname: string) {
         if (this.options.urlRoot) {
@@ -67,11 +52,7 @@ export class FileServer {
         try {
             info = await Deno.stat(filepath);
         } catch (_e) {
-            if (this.options.cleanUrls) {
-                return http.serveDir(new Request(req.url + ".html"), this.options);
-            }
-
-            return new Response("Not found", { status: 404, headers: this.options.enableCors ? { "Access-Control-Allow-Origin": "*" } : {} });
+            return http.serveDir(new Request(req.url + ".html", req), this.options);
         }
 
         if (info.isDirectory && !req.url.endsWith("/")) {
@@ -86,7 +67,6 @@ export class FileServer {
         if (
             info.isDirectory
             && this.options.showIndex
-            && this.options.gfm
             && !await fs.exists(this.resolve(path.join(url.pathname, "index.html")))
             && await fs.exists(this.resolve(path.join(url.pathname, "index.md")))
         ) {
@@ -95,12 +75,12 @@ export class FileServer {
 
         const extension = path.extname(filepath);
         if (
-            this.options.transpile && [".ts", ".tsx", ".jsx"].includes(extension)
+            [".ts", ".tsx", ".jsx"].includes(extension)
         ) {
             return this.serveTranspiled(req);
         }
 
-        if (this.options.gfm && extension === ".md") {
+        if (extension === ".md") {
             return this.serveMarkdown(req);
         }
 
@@ -147,15 +127,13 @@ export class FileServer {
             return http.serveDir(req, this.options);
         }
 
-        if (this.options.cache) {
-            const cached = await cache.match(req);
-            if (
-                cached &&
-                cached.headers.get("last-modified") ===
-                fileinfo.mtime?.toUTCString()
-            ) {
-                return cached;
-            }
+        const cached = await cache.match(req);
+        if (
+            cached &&
+            cached.headers.get("last-modified") ===
+            fileinfo.mtime?.toUTCString()
+        ) {
+            return cached;
         }
 
         const script = await Deno.readTextFile(filepath);
@@ -201,10 +179,7 @@ export class FileServer {
                 res.headers.set("Access-Control-Allow-Origin", "*");
             }
 
-            if (this.options.cache) {
-                await cache.put(req, res.clone());
-            }
-
+            await cache.put(req, res.clone());
             return res;
         } catch (e) {
             console.error("Error transforming", e);
@@ -235,15 +210,13 @@ export class FileServer {
             return this.serveMarkdown(new Request(`${url.origin}${path.join(url.pathname, "index.md")}`));
         }
 
-        if (this.options.cache) {
-            const cached = await cache.match(req);
-            if (
-                cached &&
-                cached.headers.get("last-modified") ===
-                fileinfo.mtime?.toUTCString()
-            ) {
-                return cached;
-            }
+        const cached = await cache.match(req);
+        if (
+            cached &&
+            cached.headers.get("last-modified") ===
+            fileinfo.mtime?.toUTCString()
+        ) {
+            return cached;
         }
 
         let markdown = await Deno.readTextFile(filepath);
@@ -270,9 +243,7 @@ export class FileServer {
             res.headers.set("Access-Control-Allow-Origin", "*");
         }
 
-        if (this.options.cache) {
-            await cache.put(req, res.clone());
-        }
+        await cache.put(req, res.clone());
         return res;
     }
 }
@@ -303,16 +274,6 @@ const layout = (title: string, body: string) =>
 </html>
 `;
 
-const fileServer: FileServer = new FileServer({
-    transpile: true,
-    gfm: true,
-    showIndex: true,
-    showDirListing: true,
-    cleanUrls: true,
-    enableCors: true,
-    showDotfiles: true,
-    quiet: true,
-    cache: true,
-});
+const fileServer: FileServer = new FileServer();
 
 export default fileServer;
