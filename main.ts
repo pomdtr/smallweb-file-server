@@ -1,1 +1,1 @@
-export { default } from "./mod.ts";
+export { default } from "./pkg/mod.ts";

@@ -3,10 +3,11 @@ import * as path from "@std/path/posix";
 import * as fs from "@std/fs";
 import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
+import { CSS } from "./styles.ts";
 
 import { transpile } from "@deno/emit";
 
-import { CSS, render, type RenderOptions } from "@deno/gfm";
+import { render, type RenderOptions } from "@deno/gfm";
 import "prismjs/components/prism-bash.min.js";
 import "prismjs/components/prism-javascript.min.js";
 import "prismjs/components/prism-typescript.min.js";

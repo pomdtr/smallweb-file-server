@@ -1,11 +1,11 @@
 {
     "name": "@smallweb/file-server",
     "version": "0.6.2",
-    "exports": "./mod.ts",
+    "exports": "./pkg/mod.ts",
     "license": "MIT",
     "publish": {
         "include": [
-            "mod.ts",
+            "pkg",
             "README.md"
         ]
     },

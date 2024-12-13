@@ -9,10 +9,9 @@ favicon: https://icons.smallweb.run/smallweb.svg
 This is a public shared demo instance of [smallweb](https://smallweb.run)
 running on fly.io.
 
-> **⚠️ Do not use this instance for anything important.**
->
+> [!WARNING]
 > The content of this instance will be reset anytime I feel like it. Also Since
-> this instance is shared, you should not under any circoomstance put
+> this instance is shared, you should not under any circumstances put any
 > credentials in there!
 
 ## Usage
