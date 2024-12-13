@@ -50,7 +50,17 @@ class FileServer {
         try {
             info = await Deno.stat(filepath);
         } catch (_e) {
+            const htmlInfo = await Deno.stat(filepath + ".html").catch(() => null);
+            if (htmlInfo) {
                 return http.serveDir(new Request(req.url + ".html", req), this.serveDirOptions);
+            }
+
+            const mdInfo = await Deno.stat(filepath + ".md").catch(() => null);
+            if (mdInfo) {
+                return this.serveMarkdown(new Request(req.url + ".md", req));
+            }
+
+            return new Response("Not found", { status: 404 });
         }
 
         if (info.isDirectory && !req.url.endsWith("/")) {
