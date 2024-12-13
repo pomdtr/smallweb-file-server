@@ -14,6 +14,7 @@
         "@deno/gfm": "jsr:@deno/gfm@^0.10.0",
         "@std/front-matter": "jsr:@std/front-matter@^1.0.5",
         "@std/fs": "jsr:@std/fs@^1.0.6",
+        "@std/html": "jsr:@std/html@^1.0.3",
         "@std/http": "jsr:@std/http@^1.0.11",
         "@std/path": "jsr:@std/path@^1.0.6",
         "prismjs": "npm:prismjs@^1.29.0"

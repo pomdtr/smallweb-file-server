@@ -2,6 +2,7 @@ import * as http from "@std/http";
 import * as path from "@std/path/posix";
 import * as fs from "@std/fs";
 import * as frontmatter from "@std/front-matter";
+import * as html from "@std/html"
 
 import { transpile } from "@deno/emit";
 
@@ -49,7 +50,7 @@ class FileServer {
         try {
             info = await Deno.stat(filepath);
         } catch (_e) {
-            return http.serveDir(new Request(req.url + ".html", req), this.serveDirOptions);
+                return http.serveDir(new Request(req.url + ".html", req), this.serveDirOptions);
         }
 
         if (info.isDirectory && !req.url.endsWith("/")) {
@@ -217,18 +218,28 @@ class FileServer {
         }
 
         let markdown = await Deno.readTextFile(filepath);
-        let options: { title?: string } & RenderOptions = {}
+        let attributes: { title?: string, description?: string, favicon?: string, renderOptions?: RenderOptions, head?: { tag: string, attrs: Record<string, unknown> }[] } = {}
         if (frontmatter.test(markdown, ["yaml"])) {
             const match = markdown.match(FRONTMATTER_REGEX);
             if (match) {
                 const { attrs } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
-                options = attrs
+                attributes = attrs;
                 markdown = markdown.slice(match[0].length);
             }
         }
 
-        const main = render(markdown, options);
-        const body = layout(options.title || url.pathname, main);
+        const main = render(markdown, attributes.renderOptions);
+        const head = attributes.head?.map(({ tag, attrs }) => {
+            const safeAttrs = Object.entries(attrs).map(([key, value]) => `${html.escape(key)}="${html.escape(String(value))}"`).join(" ");
+            return `<${html.escape(tag)} ${safeAttrs}></${html.escape(tag)}>`;
+        }) || [];
+        const body = layout({
+            title: attributes.title || path.basename(filepath),
+            description: attributes.description,
+            favicon: attributes.favicon,
+            head,
+            body: main
+        });
         const res = new Response(body, {
             headers: {
                 "Content-Type": "text/html; charset=utf-8",
@@ -247,13 +258,23 @@ class FileServer {
 
 const FRONTMATTER_REGEX = /^---\n[\s\S]+?\n---\n/;
 
-const layout = (title: string, body: string) =>
+
+const layout = (params: {
+    title: string;
+    description?: string;
+    favicon?: string;
+    head: string[];
+    body: string;
+}) =>
     /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${title}</title>
+<title>${html.escape(params.title)}</title>
+${params.description ? `<meta name="description" content="${html.escape(params.description)}">` : ""}
+${params.favicon ? `<link rel="icon" href="${html.escape(params.favicon)}">` : ""}
+${params.head.join("\n")}
 <style>
   main {
     max-width: 800px;
@@ -265,7 +286,7 @@ const layout = (title: string, body: string) =>
 </head>
 <body data-color-mode="auto" data-light-theme="light" data-dark-theme="dark" class="markdown-body">
 <main>
-  ${body}
+  ${params.body}
 </main>
 </body>
 </html>
