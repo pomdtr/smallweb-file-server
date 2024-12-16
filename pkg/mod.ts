@@ -280,25 +280,33 @@ const layout = (params: {
     /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${html.escape(params.title)}</title>
-${params.description ? `<meta name="description" content="${html.escape(params.description)}">` : ""}
-${params.favicon ? `<link rel="icon" href="${html.escape(params.favicon)}">` : ""}
-${params.head.join("\n")}
-<style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  ${CSS}
-</style>
-<script type="module" src=""></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${html.escape(params.title)}</title>
+    ${params.description ? `<meta name="description" content="${html.escape(params.description)}">` : ""}
+    ${params.favicon ? `<link rel="icon" href="${html.escape(params.favicon)}">` : ""}
+    ${params.head.join("\n")}
+    <style>
+        :root {
+            color-scheme: light;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: dark;
+            }
+        }
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        ${CSS}
+    </style>
+    <script type="module" src=""></script>
 </head>
 <body data-color-mode="auto" data-light-theme="light" data-dark-theme="dark" class="markdown-body">
-<main>
-  ${params.body}
-</main>
+    <main>
+        ${params.body}
+    </main>
 </body>
 </html>
 `;
