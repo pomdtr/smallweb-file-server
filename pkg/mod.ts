@@ -73,14 +73,14 @@ class FileServer {
                     minimal: false,
                 }) as {
                     errors: unknown[];
-                    redirects: { from: string; to: string }[];
+                    redirects: { from: string; to: string, status?: number }[];
                 }
 
                 if (errors.length == 0) {
                     for (const redirect of redirects) {
                         if (redirect.from == url.pathname) {
                             return new Response(null, {
-                                status: 301,
+                                status: redirect.status || 301,
                                 headers: {
                                     location: redirect.to,
                                 },
@@ -93,7 +93,11 @@ class FileServer {
             // check for 404 page
             const notFoundInfo = await Deno.stat(this.resolve("404.html")).catch(() => null);
             if (notFoundInfo) {
-                return http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
+                const resp = await http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
+                return new Response(await resp.body, {
+                    ...resp,
+                    status: 404,
+                })
             }
 
             return new Response("Not found", { status: 404 });
