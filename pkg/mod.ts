@@ -22,7 +22,6 @@ const cache = await caches.open("file-server");
 class FileServer {
     private serveDirOptions: http.ServeDirOptions = {
         showIndex: true,
-        showDirListing: true,
         enableCors: true,
         showDotfiles: true,
         quiet: true,
@@ -94,7 +93,7 @@ class FileServer {
             const notFoundInfo = await Deno.stat(this.resolve("404.html")).catch(() => null);
             if (notFoundInfo) {
                 const resp = await http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
-                return new Response(await resp.body, {
+                return new Response(resp.body, {
                     ...resp,
                     status: 404,
                 })
