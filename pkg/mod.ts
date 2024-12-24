@@ -64,7 +64,7 @@ class FileServer {
             // check for 404 page
             const notFoundInfo = await Deno.stat(this.resolve("404.html")).catch(() => null);
             if (notFoundInfo) {
-                return http.serveDir(new Request("/404.html", req), this.serveDirOptions);
+                return http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
             }
 
             return new Response("Not found", { status: 404 });
