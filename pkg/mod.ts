@@ -4,6 +4,7 @@ import * as fs from "@std/fs";
 import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
 import { CSS } from "./styles.ts";
+import { parseAllRedirects } from "netlify-redirect-parser"
 
 import { transpile } from "@deno/emit";
 
@@ -59,6 +60,34 @@ class FileServer {
             const mdInfo = await Deno.stat(filepath + ".md").catch(() => null);
             if (mdInfo) {
                 return this.serveMarkdown(new Request(req.url + ".md", req));
+            }
+
+            const redirectsPath = await this.resolve("_redirects");
+            const redirectInfo = await Deno.stat(redirectsPath).catch(() => null);
+            if (redirectInfo) {
+                const { errors, redirects } = await parseAllRedirects({
+                    redirectsFiles: [
+                        "_redirects"
+                    ],
+                    configRedirects: [],
+                    minimal: false,
+                }) as {
+                    errors: unknown[];
+                    redirects: { from: string; to: string }[];
+                }
+
+                if (errors.length == 0) {
+                    for (const redirect of redirects) {
+                        if (redirect.from == url.pathname) {
+                            return new Response(null, {
+                                status: 301,
+                                headers: {
+                                    location: redirect.to,
+                                },
+                            });
+                        }
+                    }
+                }
             }
 
             // check for 404 page

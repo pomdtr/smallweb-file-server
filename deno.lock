@@ -16,7 +16,7 @@
     "jsr:@std/fmt@^1.0.3": "1.0.3",
     "jsr:@std/fmt@~0.218.2": "0.218.2",
     "jsr:@std/front-matter@^1.0.5": "1.0.5",
-    "jsr:@std/fs@^1.0.6": "1.0.6",
+    "jsr:@std/fs@^1.0.8": "1.0.8",
     "jsr:@std/fs@~0.218.2": "0.218.2",
     "jsr:@std/html@1.0.3": "1.0.3",
     "jsr:@std/html@^1.0.3": "1.0.3",
@@ -33,6 +33,7 @@
     "jsr:@std/streams@^1.0.8": "1.0.8",
     "jsr:@std/toml@^1.0.1": "1.0.1",
     "jsr:@std/yaml@^1.0.5": "1.0.5",
+    "npm:@netlify/redirect-parser@^14.5.0": "14.5.0",
     "npm:github-slugger@2": "2.0.0",
     "npm:he@^1.2.0": "1.2.0",
     "npm:katex@0.16": "0.16.11",
@@ -40,6 +41,7 @@
     "npm:marked-footnote@^1.2.0": "1.2.4_marked@12.0.2",
     "npm:marked-gfm-heading-id@^3.1.0": "3.2.0_marked@12.0.2",
     "npm:marked@12": "12.0.2",
+    "npm:netlify-redirect-parser@^14.4.0": "14.4.0",
     "npm:prismjs@^1.29.0": "1.29.0",
     "npm:sanitize-html@^2.13.0": "2.13.1"
   },
@@ -119,8 +121,8 @@
     "@std/fs@0.218.2": {
       "integrity": "dd9431453f7282e8c577cc22c9e6d036055a9a980b5549f887d6012969fabcca"
     },
-    "@std/fs@1.0.6": {
-      "integrity": "42b56e1e41b75583a21d5a37f6a6a27de9f510bcd36c0c85791d685ca0b85fa2",
+    "@std/fs@1.0.8": {
+      "integrity": "161c721b6f9400b8100a851b6f4061431c538b204bb76c501d02c508995cffe0",
       "dependencies": [
         "jsr:@std/path@^1.0.8"
       ]
@@ -196,6 +198,19 @@
     }
   },
   "npm": {
+    "@iarna/toml@2.2.5": {
+      "integrity": "sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg=="
+    },
+    "@netlify/redirect-parser@14.5.0": {
+      "integrity": "sha512-0HxtPj+azmoaQhuZAbyTn6WyMl+PO6XrFU6TRo/0b57jtVz9uTjrvFytjmTqTvVEY1sLePCxbTbgEULm2XDTjQ==",
+      "dependencies": [
+        "@iarna/toml",
+        "fast-safe-stringify",
+        "filter-obj",
+        "is-plain-obj",
+        "path-exists"
+      ]
+    },
     "commander@8.3.0": {
       "integrity": "sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww=="
     },
@@ -233,6 +248,12 @@
     "escape-string-regexp@4.0.0": {
       "integrity": "sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA=="
     },
+    "fast-safe-stringify@2.1.1": {
+      "integrity": "sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA=="
+    },
+    "filter-obj@5.1.0": {
+      "integrity": "sha512-qWeTREPoT7I0bifpPUXtxkZJ1XJzxWtfoWWkdVGqa+eCr3SHW/Ocp89o8vLvbUuQnadybJpjOKu4V+RwO6sGng=="
+    },
     "github-slugger@2.0.0": {
       "integrity": "sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw=="
     },
@@ -247,6 +268,9 @@
         "domutils",
         "entities"
       ]
+    },
+    "is-plain-obj@4.1.0": {
+      "integrity": "sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg=="
     },
     "is-plain-object@5.0.0": {
       "integrity": "sha512-VRSzKkbMm5jMDoKLbltAkFQ5Qr7VDiTFGXxYFXXowVj387GeGNOCsOH6Msy00SGZ3Fp84b1Naa1psqgcCIEP5Q=="
@@ -282,8 +306,21 @@
     "nanoid@3.3.7": {
       "integrity": "sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g=="
     },
+    "netlify-redirect-parser@14.4.0": {
+      "integrity": "sha512-fFS8fJwYfALCjyVdPxYC7v+/Eb4XjwQK8kJn6ZXYHxMY7VK+dQUZ1+CppiUaJjlrfnixiZPfi8bzPW6rE7MnFQ==",
+      "dependencies": [
+        "@iarna/toml",
+        "fast-safe-stringify",
+        "filter-obj",
+        "is-plain-obj",
+        "path-exists"
+      ]
+    },
     "parse-srcset@1.0.2": {
       "integrity": "sha512-/2qh0lav6CmI15FzA3i/2Bzk2zCgQhGMkvhOhKNcBVQ1ldgpbfiNTVslmooUmWJcADi1f1kIeynbDRVzNlfR6Q=="
+    },
+    "path-exists@5.0.0": {
+      "integrity": "sha512-RjhtfwJOxzcFmNOi6ltcbcu4Iu+FL3zEj83dk4kAS+fVpTxXLO1b38RvJgT/0QwvV/L3aY9TAnyv0EOqW4GoMQ=="
     },
     "picocolors@1.1.1": {
       "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="
@@ -330,10 +367,12 @@
       "jsr:@deno/emit@0.45",
       "jsr:@deno/gfm@0.10",
       "jsr:@std/front-matter@^1.0.5",
-      "jsr:@std/fs@^1.0.6",
+      "jsr:@std/fs@^1.0.8",
       "jsr:@std/html@^1.0.3",
       "jsr:@std/http@^1.0.11",
       "jsr:@std/path@^1.0.6",
+      "npm:@netlify/redirect-parser@^14.5.0",
+      "npm:netlify-redirect-parser@^14.4.0",
       "npm:prismjs@^1.29.0"
     ]
   }
