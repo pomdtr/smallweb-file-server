@@ -120,6 +120,34 @@ class FileServer {
                 return this.serveMarkdown(req);
             }
 
+            const redirectsPath = await this.resolve("_redirects");
+            const redirectInfo = await Deno.stat(redirectsPath).catch(() => null);
+            if (redirectInfo) {
+                const { errors, redirects } = await parseAllRedirects({
+                    redirectsFiles: [
+                        "_redirects"
+                    ],
+                    configRedirects: [],
+                    minimal: false,
+                }) as {
+                    errors: unknown[];
+                    redirects: { from: string; to: string, status?: number }[];
+                }
+
+                if (errors.length == 0) {
+                    for (const redirect of redirects) {
+                        if (redirect.from == url.pathname) {
+                            return new Response(null, {
+                                status: redirect.status || 301,
+                                headers: {
+                                    location: redirect.to,
+                                },
+                            });
+                        }
+                    }
+                }
+            }
+
             if (await fs.exists(this.resolve("404.html"))) {
                 const resp = await http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
                 return new Response(resp.body, {
