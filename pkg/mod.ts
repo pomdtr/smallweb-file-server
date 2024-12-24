@@ -264,7 +264,7 @@ class FileServer {
         }
 
         let markdown = await Deno.readTextFile(filepath);
-        let attributes: { title?: string, description?: string, favicon?: string, renderOptions?: RenderOptions, head?: { tag: string, attrs: Record<string, unknown> }[] } = {}
+        let attributes: { title?: string, description?: string, favicon?: string, renderOptions?: RenderOptions, head?: { tag: string, attrs?: Record<string, unknown> }[] } = {}
         if (frontmatter.test(markdown, ["yaml"])) {
             const match = markdown.match(FRONTMATTER_REGEX);
             if (match) {
@@ -276,7 +276,7 @@ class FileServer {
 
         const main = render(markdown, attributes.renderOptions);
         const head = attributes.head?.map(({ tag, attrs }) => {
-            const safeAttrs = Object.entries(attrs).map(([key, value]) => `${html.escape(key)}="${html.escape(String(value))}"`).join(" ");
+            const safeAttrs = Object.entries(attrs || {}).map(([key, value]) => `${html.escape(key)}="${html.escape(String(value))}"`).join(" ");
             return `<${html.escape(tag)} ${safeAttrs}></${html.escape(tag)}>`;
         }) || [];
         const body = layout({
