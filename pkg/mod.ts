@@ -111,13 +111,24 @@ class FileServer {
             });
         }
 
-        if (
-            info.isDirectory
-            && this.serveDirOptions.showIndex
-            && !await fs.exists(this.resolve(path.join(url.pathname, "index.html")))
-            && await fs.exists(this.resolve(path.join(url.pathname, "index.md")))
-        ) {
-            return this.serveMarkdown(req);
+        if (info.isDirectory) {
+            if (await fs.exists(this.resolve(path.join(url.pathname, "index.html")))) {
+                return http.serveDir(req, this.serveDirOptions);
+            }
+
+            if (await fs.exists(this.resolve(path.join(url.pathname, "index.md")))) {
+                return this.serveMarkdown(req);
+            }
+
+            if (await fs.exists(this.resolve("404.html"))) {
+                const resp = await http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
+                return new Response(resp.body, {
+                    ...resp,
+                    status: 404,
+                })
+            }
+
+            return new Response("Not found", { status: 404 });
         }
 
         const extension = path.extname(filepath);
@@ -166,8 +177,7 @@ class FileServer {
         const fileinfo = await Deno.stat(filepath)
             .catch(() => null);
         if (!fileinfo) {
-            return new Response("Not found", { status: 404 }
-            );
+            return new Response("Not found", { status: 404 });
         }
 
         if (fileinfo.isDirectory) {
