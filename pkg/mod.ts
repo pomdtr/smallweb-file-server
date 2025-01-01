@@ -3,7 +3,7 @@ import * as path from "@std/path/posix";
 import * as fs from "@std/fs";
 import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
-import { CSS } from "./styles.ts";
+import CSS from "./styles.ts";
 import { parseAllRedirects } from "netlify-redirect-parser"
 
 import { transpile } from "@deno/emit";
