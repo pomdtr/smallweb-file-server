@@ -90,13 +90,19 @@ class FileServer {
             }
 
             // check for 404 page
-            const notFoundInfo = await Deno.stat(this.resolve("404.html")).catch(() => null);
-            if (notFoundInfo) {
+            const notFoundHtmlInfo = await Deno.stat(this.resolve("404.html")).catch(() => null);
+            if (notFoundHtmlInfo) {
                 const resp = await http.serveDir(new Request(new URL("404.html", url.origin), req), this.serveDirOptions);
                 return new Response(resp.body, {
                     ...resp,
                     status: 404,
                 })
+            }
+
+
+            const notFoundMdInfo = await Deno.stat(this.resolve("404.md")).catch(() => null);
+            if (notFoundMdInfo) {
+                return this.serveMarkdown(new Request(new URL("404.md", url.origin).toString()));
             }
 
             return new Response("Not found", { status: 404 });
@@ -374,6 +380,7 @@ const layout = (params: {
         main {
             max-width: 800px;
             margin: 0 auto;
+            padding: 0 1rem;
         }
         ${CSS}
     </style>
