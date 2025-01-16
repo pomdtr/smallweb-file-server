@@ -1,11 +1,5 @@
 # Usage
 
 ```ts
-import { FileServer } from "jsr:@smallweb/file-server";
-
-const fileServer = new FileServer({
-    root: "./static",
-});
-
-export default fileServer;
+deno serve --allow-read "jsr:@smallweb/file-server"
 ```
