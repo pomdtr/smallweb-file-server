@@ -19,13 +19,27 @@ import "prismjs/components/prism-tsx.min.js";
 
 const cache = await caches.open("file-server");
 
-class FileServer {
-    private serveDirOptions: http.ServeDirOptions = {
-        showIndex: true,
-        enableCors: true,
-        showDotfiles: true,
-        quiet: true,
+export type FileServerOptions = {
+    rootDir?: string;
+}
+
+export class FileServer {
+    private rootDir: string;
+
+    constructor(opts?: FileServerOptions) {
+        this.rootDir = opts?.rootDir || ".";
     }
+
+    get serveDirOptions(): http.ServeDirOptions {
+        return {
+            showIndex: true,
+            enableCors: true,
+            showDotfiles: true,
+            quiet: true,
+            fsRoot: this.rootDir,
+        }
+    }
+
 
     private resolve(pathname: string) {
         if (this.serveDirOptions.urlRoot) {
@@ -36,7 +50,7 @@ class FileServer {
             pathname = pathname.replace(this.serveDirOptions.urlRoot, "");
         }
 
-        return path.join(this.serveDirOptions.fsRoot || ".", pathname);
+        return path.join(this.rootDir, pathname);
     }
 
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
@@ -293,7 +307,7 @@ class FileServer {
         }
 
         if (fileinfo.isDirectory) {
-            const index = path.join(this.serveDirOptions.fsRoot || ".", url.pathname, "index.md");
+            const index = this.resolve(path.join(url.pathname, "index.md"))
             if (!await fs.exists(index)) {
                 return http.serveDir(req, this.serveDirOptions);
             }
