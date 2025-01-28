@@ -53,6 +53,44 @@ export class FileServer {
         return path.join(this.fsRoot, pathname);
     }
 
+    private async handleRedirects(url: URL, req: Request): Promise<Response | null> {
+        const redirectsPath = await this.resolve("_redirects");
+        const { errors, redirects } = await parseAllRedirects({
+            redirectsFiles: [redirectsPath],
+            configRedirects: [],
+            minimal: false,
+        }) as {
+            errors: unknown[];
+            redirects: { from: string; to: string, status?: number }[];
+        };
+
+        if (errors.length == 0) {
+            for (const redirect of redirects) {
+                if (redirect.from.endsWith("/*")) {
+                    redirect.from += "*";
+                }
+
+                const regexp = path.globToRegExp(redirect.from, {});
+                if (!regexp.test(url.pathname)) {
+                    continue;
+                }
+
+                if (redirect.status == 200) {
+                    return http.serveDir(new Request(new URL(redirect.to, url.origin), req), this.serveDirOptions);
+                }
+
+                return new Response(null, {
+                    status: redirect.status || 301,
+                    headers: {
+                        location: redirect.to,
+                    },
+                });
+            }
+        }
+
+        return null;
+    }
+
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
         const url = new URL(req.url);
 
@@ -75,36 +113,9 @@ export class FileServer {
                 return this.serveMarkdown(new Request(req.url + ".md", req));
             }
 
-            const redirectsPath = await this.resolve("_redirects");
-            const { errors, redirects } = await parseAllRedirects({
-                redirectsFiles: [
-                    redirectsPath
-                ],
-                configRedirects: [],
-                minimal: false,
-            }) as {
-                errors: unknown[];
-                redirects: { from: string; to: string, status?: number }[];
-            }
-
-            if (errors.length == 0) {
-                for (const redirect of redirects) {
-                    const regexp = path.globToRegExp(redirect.from);
-                    if (!regexp.test(url.pathname)) {
-                        continue
-                    }
-
-                    if (redirect.status == 200) {
-                        return http.serveDir(new Request(new URL(redirect.to, url.origin), req), this.serveDirOptions);
-                    }
-
-                    return new Response(null, {
-                        status: redirect.status || 301,
-                        headers: {
-                            location: redirect.to,
-                        },
-                    });
-                }
+            const redirectResponse = await this.handleRedirects(url, req);
+            if (redirectResponse) {
+                return redirectResponse;
             }
 
             // check for 404 page
@@ -144,37 +155,9 @@ export class FileServer {
                 return this.serveMarkdown(req);
             }
 
-            const redirectsPath = await this.resolve("_redirects");
-            const { errors, redirects } = await parseAllRedirects({
-                redirectsFiles: [
-                    redirectsPath
-                ],
-                configRedirects: [],
-                minimal: false,
-            }) as {
-                errors: unknown[];
-                redirects: { from: string; to: string, status?: number }[];
-            }
-
-            if (errors.length == 0) {
-                for (const redirect of redirects) {
-                    const regexp = path.globToRegExp(redirect.from);
-                    if (!regexp.test(url.pathname)) {
-                        continue
-                    }
-
-
-                    if (redirect.status == 200) {
-                        return http.serveDir(new Request(new URL(redirect.to, url.origin), req), this.serveDirOptions);
-                    }
-
-                    return new Response(null, {
-                        status: redirect.status || 301,
-                        headers: {
-                            location: redirect.to,
-                        },
-                    });
-                }
+            const redirectResponse = await this.handleRedirects(url, req);
+            if (redirectResponse) {
+                return redirectResponse;
             }
 
             if (await fs.exists(this.resolve("404.html"))) {
