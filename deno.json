@@ -1,6 +1,6 @@
 {
     "name": "@smallweb/file-server",
-    "version": "0.6.12",
+    "version": "0.6.13",
     "exports": "./pkg/mod.ts",
     "license": "MIT",
     "publish": {
