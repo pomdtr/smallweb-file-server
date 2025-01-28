@@ -20,14 +20,14 @@ import "prismjs/components/prism-tsx.min.js";
 const cache = await caches.open("file-server");
 
 export type FileServerOptions = {
-    rootDir?: string;
+    fsRoot?: string;
 }
 
 export class FileServer {
-    private rootDir: string;
+    private fsRoot: string;
 
     constructor(opts?: FileServerOptions) {
-        this.rootDir = opts?.rootDir || ".";
+        this.fsRoot = opts?.fsRoot || ".";
     }
 
     get serveDirOptions(): http.ServeDirOptions {
@@ -36,7 +36,7 @@ export class FileServer {
             enableCors: true,
             showDotfiles: true,
             quiet: true,
-            fsRoot: this.rootDir,
+            fsRoot: this.fsRoot,
         }
     }
 
@@ -50,7 +50,7 @@ export class FileServer {
             pathname = pathname.replace(this.serveDirOptions.urlRoot, "");
         }
 
-        return path.join(this.rootDir, pathname);
+        return path.join(this.fsRoot, pathname);
     }
 
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
@@ -76,30 +76,34 @@ export class FileServer {
             }
 
             const redirectsPath = await this.resolve("_redirects");
-            const redirectInfo = await Deno.stat(redirectsPath).catch(() => null);
-            if (redirectInfo) {
-                const { errors, redirects } = await parseAllRedirects({
-                    redirectsFiles: [
-                        "_redirects"
-                    ],
-                    configRedirects: [],
-                    minimal: false,
-                }) as {
-                    errors: unknown[];
-                    redirects: { from: string; to: string, status?: number }[];
-                }
+            const { errors, redirects } = await parseAllRedirects({
+                redirectsFiles: [
+                    redirectsPath
+                ],
+                configRedirects: [],
+                minimal: false,
+            }) as {
+                errors: unknown[];
+                redirects: { from: string; to: string, status?: number }[];
+            }
 
-                if (errors.length == 0) {
-                    for (const redirect of redirects) {
-                        if (redirect.from == url.pathname) {
-                            return new Response(null, {
-                                status: redirect.status || 301,
-                                headers: {
-                                    location: redirect.to,
-                                },
-                            });
-                        }
+            if (errors.length == 0) {
+                for (const redirect of redirects) {
+                    const regexp = path.globToRegExp(redirect.from);
+                    if (!regexp.test(url.pathname)) {
+                        continue
                     }
+
+                    if (redirect.status == 200) {
+                        return http.serveDir(new Request(new URL(redirect.to, url.origin), req), this.serveDirOptions);
+                    }
+
+                    return new Response(null, {
+                        status: redirect.status || 301,
+                        headers: {
+                            location: redirect.to,
+                        },
+                    });
                 }
             }
 
@@ -141,30 +145,35 @@ export class FileServer {
             }
 
             const redirectsPath = await this.resolve("_redirects");
-            const redirectInfo = await Deno.stat(redirectsPath).catch(() => null);
-            if (redirectInfo) {
-                const { errors, redirects } = await parseAllRedirects({
-                    redirectsFiles: [
-                        "_redirects"
-                    ],
-                    configRedirects: [],
-                    minimal: false,
-                }) as {
-                    errors: unknown[];
-                    redirects: { from: string; to: string, status?: number }[];
-                }
+            const { errors, redirects } = await parseAllRedirects({
+                redirectsFiles: [
+                    redirectsPath
+                ],
+                configRedirects: [],
+                minimal: false,
+            }) as {
+                errors: unknown[];
+                redirects: { from: string; to: string, status?: number }[];
+            }
 
-                if (errors.length == 0) {
-                    for (const redirect of redirects) {
-                        if (redirect.from == url.pathname) {
-                            return new Response(null, {
-                                status: redirect.status || 301,
-                                headers: {
-                                    location: redirect.to,
-                                },
-                            });
-                        }
+            if (errors.length == 0) {
+                for (const redirect of redirects) {
+                    const regexp = path.globToRegExp(redirect.from);
+                    if (!regexp.test(url.pathname)) {
+                        continue
                     }
+
+
+                    if (redirect.status == 200) {
+                        return http.serveDir(new Request(new URL(redirect.to, url.origin), req), this.serveDirOptions);
+                    }
+
+                    return new Response(null, {
+                        status: redirect.status || 301,
+                        headers: {
+                            location: redirect.to,
+                        },
+                    });
                 }
             }
 
@@ -327,12 +336,9 @@ export class FileServer {
         let markdown = await Deno.readTextFile(filepath);
         let attributes: { title?: string, description?: string, favicon?: string, renderOptions?: RenderOptions, head?: { tag: string, attrs?: Record<string, unknown> }[] } = {}
         if (frontmatter.test(markdown, ["yaml"])) {
-            const match = markdown.match(FRONTMATTER_REGEX);
-            if (match) {
-                const { attrs } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
-                attributes = attrs;
-                markdown = markdown.slice(match[0].length);
-            }
+            const { attrs, body } = frontmatter.extractYaml<Omit<RenderOptions, "renderer"> & { title?: string }>(markdown);
+            attributes = attrs;
+            markdown = body
         }
 
         const main = render(markdown, attributes.renderOptions);
@@ -362,9 +368,6 @@ export class FileServer {
         return res;
     }
 }
-
-const FRONTMATTER_REGEX = /^---\n[\s\S]+?\n---\n/;
-
 
 const layout = (params: {
     title: string;
