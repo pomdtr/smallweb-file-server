@@ -5,8 +5,7 @@ import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
 import CSS from "./styles.ts";
 import { parseAllRedirects } from "netlify-redirect-parser"
-
-import { transpile } from "@deno/emit";
+import * as esbuild from "esbuild-wasm"
 
 import { render, type RenderOptions } from "@deno/gfm";
 import "prismjs/components/prism-bash.min.js";
@@ -233,40 +232,35 @@ export class FileServer {
             return cached;
         }
 
-        const script = await Deno.readTextFile(filepath);
         try {
-            let contentType: string;
+            let options: esbuild.TransformOptions
             switch (path.extname(url.pathname)) {
                 case ".ts":
-                    contentType = "text/typescript";
+                    options = {
+                        loader: "ts",
+                    }
                     break;
                 case ".tsx":
-                    contentType = "text/tsx";
+                    options = {
+                        loader: "tsx",
+                        jsx: "automatic"
+                    }
                     break;
                 case ".jsx":
-                    contentType = "text/jsx";
+                    options = {
+                        loader: "jsx",
+                        jsx: "automatic"
+                    }
                     break;
                 default:
                     throw new Error("Invalid extension");
             }
 
-            const importMapPath = this.resolve("import_map.json");
-            const result = await transpile(url, {
-                importMap: await fs.exists(importMapPath) ? importMapPath : undefined,
-                load: (url) => {
-                    return Promise.resolve({
-                        kind: "module",
-                        specifier: url,
-                        headers: {
-                            "content-type": contentType,
-                        },
-                        content: script,
-                    });
-                }
-            });
+            const input = await Deno.readFile(filepath)
+            const result = await esbuild.transform(input, options)
+            await esbuild.stop()
 
-            const code = result.get(url.href);
-            const res = new Response(code, {
+            const res = new Response(result.code, {
                 headers: {
                     "Content-Type": "text/javascript",
                     "last-modified": fileinfo.mtime?.toUTCString() || "",
@@ -282,11 +276,8 @@ export class FileServer {
             return res;
         } catch (e) {
             console.error("Error transforming", e);
-            return new Response(script, {
+            return new Response("Internal server error", {
                 status: 500,
-                headers: {
-                    "Content-Type": "text/javascript",
-                },
             });
         }
 

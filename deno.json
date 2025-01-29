@@ -1,6 +1,6 @@
 {
     "name": "@smallweb/file-server",
-    "version": "0.6.15",
+    "version": "0.7.0",
     "exports": "./pkg/mod.ts",
     "license": "MIT",
     "publish": {
@@ -10,7 +10,6 @@
         ]
     },
     "imports": {
-        "@deno/emit": "jsr:@deno/emit@^0.45.0",
         "@deno/gfm": "jsr:@deno/gfm@^0.10.0",
         "@netlify/redirect-parser": "npm:@netlify/redirect-parser@^14.5.0",
         "@std/front-matter": "jsr:@std/front-matter@^1.0.5",
@@ -18,6 +17,7 @@
         "@std/html": "jsr:@std/html@^1.0.3",
         "@std/http": "jsr:@std/http@^1.0.11",
         "@std/path": "jsr:@std/path@^1.0.6",
+        "esbuild-wasm": "npm:esbuild-wasm@^0.24.2",
         "netlify-redirect-parser": "npm:netlify-redirect-parser@^14.4.0",
         "prismjs": "npm:prismjs@^1.29.0"
     }
