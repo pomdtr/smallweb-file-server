@@ -250,7 +250,9 @@ export class FileServer {
                     throw new Error("Invalid extension");
             }
 
+            const importMapPath = this.resolve("import_map.json");
             const result = await transpile(url, {
+                importMap: await fs.exists(importMapPath) ? importMapPath : undefined,
                 load: (url) => {
                     return Promise.resolve({
                         kind: "module",
@@ -260,10 +262,10 @@ export class FileServer {
                         },
                         content: script,
                     });
-                },
+                }
             });
-            const code = result.get(url.href);
 
+            const code = result.get(url.href);
             const res = new Response(code, {
                 headers: {
                     "Content-Type": "text/javascript",
