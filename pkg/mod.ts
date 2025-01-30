@@ -5,6 +5,7 @@ import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
 import CSS from "./styles.ts";
 import { parseAllRedirects } from "netlify-redirect-parser"
+import initSwc, { transform, type Options } from "@swc/wasm-web";
 
 import { render, type RenderOptions } from "@deno/gfm";
 import "prismjs/components/prism-bash.min.js";
@@ -16,6 +17,8 @@ import "prismjs/components/prism-jsx.min.js";
 import "prismjs/components/prism-tsx.min.js";
 
 const cache = await caches.open("file-server");
+
+await initSwc();
 
 export type FileServerOptions = {
     fsRoot?: string;
@@ -87,6 +90,110 @@ export class FileServer {
         }
 
         return null;
+    }
+
+    private serveTranspiled = async (req: Request) => {
+        const url = new URL(req.url);
+        const filepath = this.resolve(url.pathname);
+        const fileinfo = await Deno.stat(filepath)
+            .catch(() => null);
+        if (!fileinfo) {
+            return new Response("Not found", { status: 404 });
+        }
+
+        if (fileinfo.isDirectory) {
+            return http.serveDir(req, this.serveDirOptions);
+        }
+
+        const cached = await cache.match(req);
+        if (
+            cached &&
+            cached.headers.get("last-modified") ===
+            fileinfo.mtime?.toUTCString()
+        ) {
+            return cached;
+        }
+
+        try {
+            const code = await Deno.readTextFile(filepath);
+            let transformOptions: Options
+            switch (path.extname(filepath)) {
+                case ".ts":
+                    transformOptions = {
+                        jsc: {
+                            parser: {
+                                syntax: "typescript",
+                            },
+                            target: "es2022"
+                        },
+                        module: {
+                            type: "es6"
+                        }
+                    }
+                    break
+                case ".tsx":
+                    transformOptions = {
+                        jsc: {
+                            parser: {
+                                syntax: "typescript",
+                                tsx: true
+                            },
+                            target: "es2022",
+                            transform: {
+                                react: {
+                                    runtime: "automatic"
+                                }
+                            }
+                        },
+                        module: {
+                            type: "es6"
+                        }
+                    }
+                    break
+                case ".jsx":
+                    transformOptions = {
+                        jsc: {
+                            parser: {
+                                syntax: "ecmascript",
+                                jsx: true
+                            },
+                            target: "es2022",
+                            transform: {
+                                react: {
+                                    runtime: "automatic"
+                                }
+                            }
+                        },
+                        module: {
+                            type: "es6"
+                        }
+                    }
+                    break
+                default:
+                    throw new Error("Unsupported file type");
+            }
+
+            const res = await transform(code, transformOptions)
+            const resp = new Response(res.code, {
+                headers: {
+                    "Content-Type": "text/javascript",
+                    "last-modified": fileinfo.mtime?.toUTCString() || "",
+                },
+                status: 200,
+            });
+
+            if (this.serveDirOptions.enableCors) {
+                resp.headers.set("Access-Control-Allow-Origin", "*");
+            }
+
+            await cache.put(req, resp.clone());
+            return resp;
+        } catch (e) {
+            console.error("Error transforming", e);
+            return new Response("Internal server error", {
+                status: 500,
+            });
+        }
     }
 
     fetch: (req: Request) => Response | Promise<Response> = async (req) => {
@@ -169,7 +276,14 @@ export class FileServer {
             return new Response("Not found", { status: 404 });
         }
 
-        if (path.extname(filepath) === ".md") {
+        const extension = path.extname(filepath);
+        if (
+            [".ts", ".tsx", ".jsx"].includes(extension)
+        ) {
+            return this.serveTranspiled(req);
+        }
+
+        if (extension === ".md") {
             return this.serveMarkdown(req);
         }
 

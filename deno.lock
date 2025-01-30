@@ -23,6 +23,8 @@
     "jsr:@std/toml@^1.0.1": "1.0.1",
     "jsr:@std/yaml@^1.0.5": "1.0.5",
     "npm:@netlify/redirect-parser@^14.5.0": "14.5.0",
+    "npm:@swc/wasm-web@*": "1.10.12",
+    "npm:@swc/wasm-web@^1.10.12": "1.10.12",
     "npm:github-slugger@2": "2.0.0",
     "npm:he@^1.2.0": "1.2.0",
     "npm:katex@0.16": "0.16.11",
@@ -145,6 +147,9 @@
         "is-plain-obj",
         "path-exists"
       ]
+    },
+    "@swc/wasm-web@1.10.12": {
+      "integrity": "sha512-BM5cxJ1fX5KV+g2U05z4N4sW9mnISBSploZkO49VqGGVD+j9GnU/nEXHNHWKnIzs4Aienv3PShdFSnj1kmDzvQ=="
     },
     "commander@8.3.0": {
       "integrity": "sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww=="
@@ -322,6 +327,7 @@
       "jsr:@std/http@^1.0.11",
       "jsr:@std/path@^1.0.6",
       "npm:@netlify/redirect-parser@^14.5.0",
+      "npm:@swc/wasm-web@^1.10.12",
       "npm:netlify-redirect-parser@^14.4.0",
       "npm:prismjs@^1.29.0"
     ]
