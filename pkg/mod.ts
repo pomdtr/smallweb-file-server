@@ -5,7 +5,6 @@ import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
 import CSS from "./styles.ts";
 import { parseAllRedirects } from "netlify-redirect-parser"
-import * as esbuild from "esbuild-wasm"
 
 import { render, type RenderOptions } from "@deno/gfm";
 import "prismjs/components/prism-bash.min.js";
@@ -170,14 +169,7 @@ export class FileServer {
             return new Response("Not found", { status: 404 });
         }
 
-        const extension = path.extname(filepath);
-        if (
-            [".ts", ".tsx", ".jsx"].includes(extension)
-        ) {
-            return this.serveTranspiled(req);
-        }
-
-        if (extension === ".md") {
+        if (path.extname(filepath) === ".md") {
             return this.serveMarkdown(req);
         }
 
@@ -209,79 +201,6 @@ export class FileServer {
         }
     }
 
-
-    private serveTranspiled = async (req: Request) => {
-        const url = new URL(req.url);
-        const filepath = this.resolve(url.pathname);
-        const fileinfo = await Deno.stat(filepath)
-            .catch(() => null);
-        if (!fileinfo) {
-            return new Response("Not found", { status: 404 });
-        }
-
-        if (fileinfo.isDirectory) {
-            return http.serveDir(req, this.serveDirOptions);
-        }
-
-        const cached = await cache.match(req);
-        if (
-            cached &&
-            cached.headers.get("last-modified") ===
-            fileinfo.mtime?.toUTCString()
-        ) {
-            return cached;
-        }
-
-        try {
-            let options: esbuild.TransformOptions
-            switch (path.extname(url.pathname)) {
-                case ".ts":
-                    options = {
-                        loader: "ts",
-                    }
-                    break;
-                case ".tsx":
-                    options = {
-                        loader: "tsx",
-                        jsx: "automatic"
-                    }
-                    break;
-                case ".jsx":
-                    options = {
-                        loader: "jsx",
-                        jsx: "automatic"
-                    }
-                    break;
-                default:
-                    throw new Error("Invalid extension");
-            }
-
-            const input = await Deno.readFile(filepath)
-            const result = await esbuild.transform(input, options)
-            await esbuild.stop()
-
-            const res = new Response(result.code, {
-                headers: {
-                    "Content-Type": "text/javascript",
-                    "last-modified": fileinfo.mtime?.toUTCString() || "",
-                },
-                status: 200,
-            });
-
-            if (this.serveDirOptions.enableCors) {
-                res.headers.set("Access-Control-Allow-Origin", "*");
-            }
-
-            await cache.put(req, res.clone());
-            return res;
-        } catch (e) {
-            console.error("Error transforming", e);
-            return new Response("Internal server error", {
-                status: 500,
-            });
-        }
-
-    }
 
     private serveMarkdown = async (req: Request): Promise<Response> => {
         const url = new URL(req.url);
