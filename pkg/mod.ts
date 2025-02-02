@@ -16,8 +16,6 @@ import "prismjs/components/prism-json.min.js";
 import "prismjs/components/prism-jsx.min.js";
 import "prismjs/components/prism-tsx.min.js";
 
-const cache = await caches.open("file-server");
-
 export type FileServerOptions = {
     fsRoot?: string;
 }
@@ -25,6 +23,8 @@ export type FileServerOptions = {
 export class FileServer {
     private fsRoot: string;
     private swcInit: Promise<InitOutput> | null = null;
+    private cache: Promise<Cache> | null = null;
+
 
     constructor(opts?: FileServerOptions) {
         this.fsRoot = opts?.fsRoot || ".";
@@ -99,6 +99,14 @@ export class FileServer {
         await this.swcInit
     }
 
+    private getCache = async () => {
+        if (!this.cache) {
+            this.cache = caches.open("file-server");
+        }
+
+        return await this.cache;
+    }
+
     private serveTranspiled = async (req: Request) => {
         const url = new URL(req.url);
         const filepath = this.resolve(url.pathname);
@@ -112,6 +120,7 @@ export class FileServer {
             return http.serveDir(req, this.serveDirOptions);
         }
 
+        const cache = await this.getCache();
         const cached = await cache.match(req);
         if (
             cached &&
@@ -341,6 +350,7 @@ export class FileServer {
             return this.serveMarkdown(new Request(`${url.origin}${path.join(url.pathname, "index.md")}`));
         }
 
+        const cache = await this.getCache();
         const cached = await cache.match(req);
         if (
             cached &&
