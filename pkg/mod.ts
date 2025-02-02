@@ -5,7 +5,7 @@ import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html"
 import CSS from "./styles.ts";
 import { parseAllRedirects } from "netlify-redirect-parser"
-import initSwc, { transform, type Options } from "@swc/wasm-web";
+import initSwc, { type InitOutput, transform, type Options } from "@swc/wasm-web";
 
 import { render, type RenderOptions } from "@deno/gfm";
 import "prismjs/components/prism-bash.min.js";
@@ -18,14 +18,13 @@ import "prismjs/components/prism-tsx.min.js";
 
 const cache = await caches.open("file-server");
 
-await initSwc();
-
 export type FileServerOptions = {
     fsRoot?: string;
 }
 
 export class FileServer {
     private fsRoot: string;
+    private swcInit: Promise<InitOutput> | null = null;
 
     constructor(opts?: FileServerOptions) {
         this.fsRoot = opts?.fsRoot || ".";
@@ -92,6 +91,14 @@ export class FileServer {
         return null;
     }
 
+    private initializeTransformer = async () => {
+        if (!this.swcInit) {
+            this.swcInit = initSwc();
+        }
+
+        await this.swcInit
+    }
+
     private serveTranspiled = async (req: Request) => {
         const url = new URL(req.url);
         const filepath = this.resolve(url.pathname);
@@ -115,6 +122,7 @@ export class FileServer {
         }
 
         try {
+            await this.initializeTransformer();
             const code = await Deno.readTextFile(filepath);
             let transformOptions: Options
             switch (path.extname(filepath)) {
