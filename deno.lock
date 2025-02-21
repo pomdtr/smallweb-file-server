@@ -12,6 +12,7 @@
     "jsr:@std/fs@^1.0.13": "1.0.13",
     "jsr:@std/html@1.0.3": "1.0.3",
     "jsr:@std/html@^1.0.3": "1.0.3",
+    "jsr:@std/http@1.0.12": "1.0.12",
     "jsr:@std/http@^1.0.13": "1.0.13",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
     "jsr:@std/net@^1.0.4": "1.0.4",
@@ -95,6 +96,9 @@
         "jsr:@std/path@^1.0.8",
         "jsr:@std/streams"
       ]
+    },
+    "@std/http@1.0.12": {
+      "integrity": "85246d8bfe9c8e2538518725b158bdc31f616e0869255f4a8d9e3de919cab2aa"
     },
     "@std/http@1.0.13": {
       "integrity": "d29618b982f7ae44380111f7e5b43da59b15db64101198bb5f77100d44eb1e1e",
@@ -321,8 +325,7 @@
       "jsr:@std/http@^1.0.13",
       "jsr:@std/path@^1.0.6",
       "npm:@netlify/redirect-parser@^14.5.0",
-      "npm:netlify-redirect-parser@^14.4.0",
-      "npm:prismjs@^1.29.0"
+      "npm:netlify-redirect-parser@^14.4.0"
     ]
   }
 }

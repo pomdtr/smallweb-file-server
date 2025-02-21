@@ -5,15 +5,7 @@ import * as frontmatter from "@std/front-matter";
 import * as html from "@std/html";
 import CSS from "./styles.ts";
 import { parseAllRedirects } from "netlify-redirect-parser";
-
 import { render, type RenderOptions } from "@deno/gfm";
-import "prismjs/components/prism-bash.min.js";
-import "prismjs/components/prism-javascript.min.js";
-import "prismjs/components/prism-typescript.min.js";
-import "prismjs/components/prism-css.min.js";
-import "prismjs/components/prism-json.min.js";
-import "prismjs/components/prism-jsx.min.js";
-import "prismjs/components/prism-tsx.min.js";
 
 export type FileServerOptions = {
   fsRoot?: string;

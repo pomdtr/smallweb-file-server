@@ -17,7 +17,6 @@
         "@std/html": "jsr:@std/html@^1.0.3",
         "@std/http": "jsr:@std/http@^1.0.13",
         "@std/path": "jsr:@std/path@^1.0.6",
-        "netlify-redirect-parser": "npm:netlify-redirect-parser@^14.4.0",
-        "prismjs": "npm:prismjs@^1.29.0"
+        "netlify-redirect-parser": "npm:netlify-redirect-parser@^14.4.0"
     }
 }
