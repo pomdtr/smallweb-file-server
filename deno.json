@@ -1,6 +1,6 @@
 {
     "name": "@smallweb/file-server",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "exports": "./pkg/mod.ts",
     "license": "MIT",
     "publish": {
@@ -12,12 +12,11 @@
     "imports": {
         "@deno/gfm": "jsr:@deno/gfm@^0.10.0",
         "@netlify/redirect-parser": "npm:@netlify/redirect-parser@^14.5.0",
-        "@std/front-matter": "jsr:@std/front-matter@^1.0.5",
-        "@std/fs": "jsr:@std/fs@^1.0.8",
+        "@std/front-matter": "jsr:@std/front-matter@^1.0.7",
+        "@std/fs": "jsr:@std/fs@^1.0.13",
         "@std/html": "jsr:@std/html@^1.0.3",
-        "@std/http": "jsr:@std/http@^1.0.11",
+        "@std/http": "jsr:@std/http@^1.0.13",
         "@std/path": "jsr:@std/path@^1.0.6",
-        "@swc/wasm-web": "npm:@swc/wasm-web@^1.10.12",
         "netlify-redirect-parser": "npm:netlify-redirect-parser@^14.4.0",
         "prismjs": "npm:prismjs@^1.29.0"
     }
