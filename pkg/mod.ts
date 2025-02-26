@@ -189,10 +189,6 @@ export class FileServer {
       return new Response("Not found", { status: 404 });
     }
 
-    if (path.extname(filepath) === ".md") {
-      return this.serveMarkdown(req);
-    }
-
     return http.serveDir(req, this.serveDirOptions);
   };
 
