@@ -1179,6 +1179,7 @@ export default /* css */ `
   font-weight: var(--base-text-weight-medium, 500);
   align-items: center;
   line-height: 1;
+  gap: var(--base-size-8);
 }
 
 .markdown-body .markdown-alert.markdown-alert-note {
