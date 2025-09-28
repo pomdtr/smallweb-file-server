@@ -98,7 +98,17 @@ export class FileServer {
 
     const filepath = this.resolve(url.pathname);
     if (path.resolve(filepath) == path.resolve(".env")) {
-      return new Response(".env files are not served", { status: 403 });
+      return new Response(null, { status: 404 });
+    }
+
+    const gitDir = this.resolve(".git");
+    if (path.common([filepath, gitDir]) === gitDir) {
+      return new Response(null, { status: 404 });
+    }
+
+    const smallwebDir = this.resolve(".smallweb");
+    if (path.common([filepath, smallwebDir]) === smallwebDir) {
+      return new Response(null, { status: 404 });
     }
 
     let info: Deno.FileInfo;
@@ -242,7 +252,7 @@ export class FileServer {
     if (
       cached &&
       cached.headers.get("last-modified") ===
-        fileinfo.mtime?.toUTCString()
+      fileinfo.mtime?.toUTCString()
     ) {
       return cached;
     }
@@ -306,15 +316,13 @@ const layout = (params: {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${html.escape(params.title)}</title>
-    ${
-    params.description
-      ? `<meta name="description" content="${html.escape(params.description)}">`
-      : ""
+    ${params.description
+    ? `<meta name="description" content="${html.escape(params.description)}">`
+    : ""
   }
-    ${
-    params.favicon
-      ? `<link rel="icon" href="${html.escape(params.favicon)}">`
-      : ""
+    ${params.favicon
+    ? `<link rel="icon" href="${html.escape(params.favicon)}">`
+    : ""
   }
     ${params.head.join("\n")}
     <style>
